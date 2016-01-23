@@ -31,7 +31,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.activity_main);
 
         dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
-                + "/picFolder/";
+                + "/IrisPictures/";
         newDir = new File(dir);
         newDir.mkdirs();
 
