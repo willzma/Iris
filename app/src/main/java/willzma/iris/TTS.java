@@ -25,8 +25,8 @@ public class TTS extends AsyncTask<String, Void, Boolean> implements TextToSpeec
     private Exception exception;
     private TextToSpeech speaker;
     private String txt = "";
-    private String[] phrases = {"Here's what I'm seeing, ", "Picture thisssss, ",
-        "If I could pick a few words to describe your surroundings, I'd saay, ", "Here's what's in front of yoou, "};
+    private String[] phrases = {"Here's what I'm seeing, ", "Picture thiss, ",
+        "If I could pick a few words to describe your surroundings, I'd say, ", "Here's what's in front of you, "};
     private boolean runIt;
 
     protected Boolean doInBackground(String... params) {
