@@ -1,4 +1,3 @@
-######[Submission for SwampHacks 2016]
 ![alt text](http://i.imgur.com/zSvMjIc.png)
 ##Inspiration
 We came across the idea of Iris while exploring the unique ability of the Clarifai API to analyze images and parse them for descriptive tags. We broke Clarifai down into an equation: Picture + Clarifai = Tags. So why not flip that equation on its head and use tags to "create" a picture? Through the use of descriptive tags, Iris aurally illustrates a scene in the minds of the blind. After all, a picture is worth a thousand words.
@@ -15,7 +14,16 @@ Iris peeks out of the user’s breast pocket, waiting until needed. Using the My
 Most of the challenges we faced were because of the many asynchronous threads required to make Iris function. The camera, Clarifai API, text to speech, and loading screen all run separate threads, making it extremely difficult to implement them all at once. When working with the camera, we had to get around using the built in camera software by using Android’s hardware camera. The issue with this is that it is asynchronous, and we also have to handle raw image data, using byte streams and byte arrays. Our other significant issue was that the Myo armband became very unreliable at times, forcing us to recalibrate it before each use.
 
 ##Accomplishments that we're proud of
-Our team is fairly new to asynchronous programming, so creating a working product was a large feat for us. We worked hard to create an application that was meant to help those who really need it, and we produced an application that does exactly that, despite its difficulties.
+Our team is fairly new to asynchronous programming, and working on separate threads, so this entire project was a great challenge. We worked on having the calls to APIs asynchronously, as the APIs’ documentation suggested, however with only 6 hours left, we had an application that broke every time the async tasks finished in the wrong order. However, after a significant amount of refactoring, we were able to organize the application in a more efficient manner, making it fully functional and capable of helping those who need it.
 
 ##What we learned
 We really learned a great deal about the less common sides of Android development. File manipulation, camera usage, and asynchronous task management, were among these aspects. As CS majors we usually do not dabble on the hardware side of things, so working with the armband was also a big learning experience for us.
+
+##Built With
+clarifai
+android
+android-studio
+myo
+tts
+java
+domain.com
