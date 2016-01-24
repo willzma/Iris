@@ -169,13 +169,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
 
         // Next, register for DeviceListener callbacks.
         hub.addListener(mListener);
-        try {
-            File f = new File (new URI(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
-                    .getAbsolutePath() + "/Iris/Iris" + (count - 1) + ".png").getPath());
-            new Clarifai().execute(f);
-        } catch (URISyntaxException e) {
-            e.printStackTrace();
-        }
+
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.content_main);
@@ -234,6 +228,13 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
 
 
                 camera.takePicture(null, null, getJpegCallback());
+                try {
+                    File f = new File (new URI(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
+                            .getAbsolutePath() + "/Iris/Iris" + (count+1) + ".png").getPath());
+                    new Clarifai().execute(f);
+                } catch (URISyntaxException e) {
+                    e.printStackTrace();
+                }
 /*
                 View mRootView = getWindow().getDecorView();
                 mRootView.setDrawingCacheEnabled(true);
