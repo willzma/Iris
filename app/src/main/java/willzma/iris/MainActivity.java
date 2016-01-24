@@ -321,6 +321,11 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
         int uiOptions = View.SYSTEM_UI_FLAG_FULLSCREEN;
         decorView.setSystemUiVisibility(uiOptions);
         camera=Camera.open();
+
+        Camera.Parameters params = camera.getParameters();
+        params.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
+        camera.setParameters(params);
+
         camera.setDisplayOrientation(90);
         //startPreview();
     }
@@ -443,36 +448,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
 
     public void surfaceChanged(SurfaceHolder holder, int format, int width, int height)
     {
-        /*if (inPreview)
-        {
-            camera.stopPreview();
-        }
-
-        Camera.Parameters parameters = camera.getParameters();
-        Display display = ((WindowManager)getSystemService(WINDOW_SERVICE)).getDefaultDisplay();
-
-        if(display.getRotation() == Surface.ROTATION_0)
-        {
-            parameters.setPreviewSize(height, width);
-        }
-
-        if(display.getRotation() == Surface.ROTATION_90)
-        {
-            parameters.setPreviewSize(width, height);
-        }
-
-        if(display.getRotation() == Surface.ROTATION_180)
-        {
-            parameters.setPreviewSize(height, width);
-        }
-
-        if(display.getRotation() == Surface.ROTATION_270)
-        {
-            parameters.setPreviewSize(width, height);
-        }
-
-        camera.setParameters(parameters);
-        startPreview();*/
+        
     }
 
     public void previewCamera()

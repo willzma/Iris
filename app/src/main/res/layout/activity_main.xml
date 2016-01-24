@@ -3,12 +3,7 @@
     android:id="@+id/surfaceView"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:onClick="takeShot"
     >
-
-    <Button android:id="@+id/takePicture"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:background="@android:color/transparent"
-        />
 
 </android.view.SurfaceView>
