@@ -5,6 +5,7 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.graphics.Bitmap;
+import android.graphics.Color;
 import android.hardware.Camera;
 import android.hardware.Camera.PictureCallback;
 import android.hardware.Camera.ShutterCallback;
@@ -23,11 +24,13 @@ import android.view.Surface;
 import android.view.SurfaceHolder;
 import android.view.SurfaceView;
 import android.view.View;
+import android.view.View.OnLongClickListener;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ImageView;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import java.io.File;
@@ -38,6 +41,15 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import com.thalmic.myo.AbstractDeviceListener;
+import com.thalmic.myo.Arm;
+import com.thalmic.myo.DeviceListener;
+import com.thalmic.myo.Hub;
+import com.thalmic.myo.Myo;
+import com.thalmic.myo.Pose;
+import com.thalmic.myo.Quaternion;
+import com.thalmic.myo.XDirection;
+import com.thalmic.myo.scanner.ScanActivity;
 
 public class MainActivity extends AppCompatActivity implements SurfaceHolder.Callback {
 
@@ -50,12 +62,113 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
     int TAKE_PHOTO_CODE = 0;
     private int count = 0;
 
+    private DeviceListener mListener = new AbstractDeviceListener() {
+
+        // onConnect() is called whenever a Myo has been connected.
+        @Override
+        public void onConnect(Myo myo, long timestamp) {
+            // Set the text color of the text view to cyan when a Myo connects.
+        }
+
+        // onDisconnect() is called whenever a Myo has been disconnected.
+        @Override
+        public void onDisconnect(Myo myo, long timestamp) {
+            // Set the text color of the text view to red when a Myo disconnects.
+        }
+
+        // onArmSync() is called whenever Myo has recognized a Sync Gesture after someone has put it on their
+        // arm. This lets Myo know which arm it's on and which way it's facing.
+        @Override
+        public void onArmSync(Myo myo, long timestamp, Arm arm, XDirection xDirection) {
+        }
+
+        // onArmUnsync() is called whenever Myo has detected that it was moved from a stable position on a person's arm after
+        // it recognized the arm. Typically this happens when someone takes Myo off of their arm, but it can also happen
+        // when Myo is moved around on the arm.
+        @Override
+        public void onArmUnsync(Myo myo, long timestamp) {
+        }
+
+        // onUnlock() is called whenever a synced Myo has been unlocked. Under the standard locking
+        // policy, that means poses will now be delivered to the listener.
+        @Override
+        public void onUnlock(Myo myo, long timestamp) {
+        }
+
+        // onLock() is called whenever a synced Myo has been locked. Under the standard locking
+        // policy, that means poses will no longer be delivered to the listener.
+        @Override
+        public void onLock(Myo myo, long timestamp) {
+        }
+
+        // onOrientationData() is called whenever a Myo provides its current orientation,
+        // represented as a quaternion.
+        @Override
+        public void onOrientationData(Myo myo, long timestamp, Quaternion rotation) {
+        }
+
+        // onPose() is called whenever a Myo provides a new pose.
+        @Override
+        public void onPose(Myo myo, long timestamp, Pose pose) {
+            // Handle the cases of the Pose enumeration, and change the text of the text view
+            // based on the pose we receive.
+            switch (pose) {
+                case UNKNOWN:
+                    break;
+                case REST:
+                case DOUBLE_TAP:
+                    String restTextId = "HELLOWORLD";
+                    switch (myo.getArm()) {
+                        case LEFT:
+                            restTextId = "ARMLEFT";
+                            break;
+                        case RIGHT:
+                            restTextId = "ARMRIGHT";
+                            break;
+                    }
+                    break;
+                case FIST:
+                    ((Button) findViewById(R.id.takePicture)).performClick();
+                    break;
+                case WAVE_IN:
+                    break;
+                case WAVE_OUT:
+                    break;
+                case FINGERS_SPREAD:
+                    break;
+            }
+
+            if (pose != Pose.UNKNOWN && pose != Pose.REST) {
+                // Tell the Myo to stay unlocked until told otherwise. We do that here so you can
+                // hold the poses without the Myo becoming locked.
+                myo.unlock(Myo.UnlockType.HOLD);
+
+                // Notify the Myo that the pose has resulted in an action, in this case changing
+                // the text on the screen. The Myo will vibrate.
+                myo.notifyUserAction();
+            } else {
+                // Tell the Myo to stay unlocked only for a short period. This allows the Myo to
+                // stay unlocked while poses are being performed, but lock after inactivity.
+                myo.unlock(Myo.UnlockType.TIMED);
+            }
+        }
+    };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         View decorView = getWindow().getDecorView();
         int uiOptions = View.SYSTEM_UI_FLAG_FULLSCREEN;
-        decorView.setSystemUiVisibility(uiOptions);s
+        decorView.setSystemUiVisibility(uiOptions);
+        Hub hub = Hub.getInstance();
+        if (!hub.init(this, "com.willzma.iris")) {
+            // We can't do anything with the Myo device if the Hub can't be initialized, so exit.
+            Toast.makeText(this, "Couldn't initialize Hub", Toast.LENGTH_SHORT).show();
+            finish();
+            return;
+        }
 
+        // Next, register for DeviceListener callbacks.
+        hub.addListener(mListener);
         try {
             File f = new File (new URI(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
                     .getAbsolutePath() + "/iFunny/meme.jpg").getPath());
@@ -82,9 +195,15 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
         } catch (URISyntaxException e) {
             e.printStackTrace();
         }
-
+        final Intent intent = new Intent(this, ScanActivity.class);
 
         Button takePicture = (Button) findViewById(R.id.takePicture);
+        takePicture.setOnLongClickListener(new View.OnLongClickListener() {
+            public boolean onLongClick(View v) {
+                startActivity(intent);
+                return true;
+            }
+        });
         takePicture.setOnClickListener(new View.OnClickListener() {
 
 
@@ -197,10 +316,12 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
     @Override
     public void onResume() {
         super.onResume();
-
+        View decorView = getWindow().getDecorView();
+        int uiOptions = View.SYSTEM_UI_FLAG_FULLSCREEN;
+        decorView.setSystemUiVisibility(uiOptions);
         camera=Camera.open();
         camera.setDisplayOrientation(90);
-        startPreview();
+        //startPreview();
     }
 
     @Override
