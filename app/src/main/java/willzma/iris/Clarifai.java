@@ -1,6 +1,8 @@
 package willzma.iris;
 
 import android.app.Application;
+import android.content.Context;
+import android.content.Intent;
 import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
@@ -18,6 +20,12 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
+import java.util.concurrent.CountDownLatch;
+
+import android.speech.tts.TextToSpeech;
+import android.speech.tts.TextToSpeech.OnInitListener;
+import android.util.Log;
 
 /**
  * Created by Nick on 1/23/2016.
@@ -25,7 +33,8 @@ import java.util.List;
 public class Clarifai extends AsyncTask<File, Void, List<String>>{
 
     private Exception exception;
-
+    public String tags = "";
+    public CountDownLatch l = new CountDownLatch(1);
 
     protected List<String> doInBackground(File... params) {
         ArrayList<String> arr = new ArrayList<String>();
@@ -35,11 +44,11 @@ public class Clarifai extends AsyncTask<File, Void, List<String>>{
         List<RecognitionResult> results =
                 clarifai.recognize(new RecognitionRequest(params[0]));
         System.out.println("OK!... #################################");
-
         for (Tag tag : results.get(0).getTags()) {
             System.out.println(tag.getName() + ": " + tag.getProbability());
+            tags+=tag.getName() + ", ";
         }
+        l.countDown();
         return null;
     }
-
 }

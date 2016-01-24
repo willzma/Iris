@@ -2,6 +2,7 @@ package willzma.iris;
 
 import android.app.ActionBar;
 import android.app.Activity;
+import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.graphics.Bitmap;
@@ -53,6 +54,7 @@ import com.thalmic.myo.scanner.ScanActivity;
 
 public class MainActivity extends AppCompatActivity implements SurfaceHolder.Callback {
 
+    private Context context = this;
     private SurfaceView preview=null;
     private SurfaceHolder previewHolder=null;
     private Camera camera=null;
@@ -117,24 +119,20 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
                     break;
                 case REST:
                 case DOUBLE_TAP:
-                    String restTextId = "HELLOWORLD";
-                    switch (myo.getArm()) {
-                        case LEFT:
-                            restTextId = "ARMLEFT";
-                            break;
-                        case RIGHT:
-                            restTextId = "ARMRIGHT";
-                            break;
-                    }
+                    System.out.println("doubletap");
                     break;
                 case FIST:
                     ((Button) findViewById(R.id.takePicture)).performClick();
+                    System.out.println("fist");
                     break;
                 case WAVE_IN:
+                    System.out.println("wavein");
                     break;
                 case WAVE_OUT:
+                    System.out.println("waveout");
                     break;
                 case FINGERS_SPREAD:
+                    System.out.println("fingers doe");
                     break;
             }
 
@@ -226,12 +224,14 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
 
             public void onClick(View v) {
 
-
                 camera.takePicture(null, null, getJpegCallback());
                 try {
                     File f = new File (new URI(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
                             .getAbsolutePath() + "/Iris/Iris" + (count+1) + ".png").getPath());
-                    new Clarifai().execute(f);
+                    Clarifai x = new Clarifai();
+                    x.execute(f);
+                    new TTS(context).execute(x);
+
                 } catch (URISyntaxException e) {
                     e.printStackTrace();
                 }
