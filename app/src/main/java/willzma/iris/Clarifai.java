@@ -35,7 +35,7 @@ public class Clarifai{
                 System.out.println(tag.getName() + ": " + tag.getProbability());
                 tags += tag.getName() + ", ";
             }
-            new TTS(ci).execute(tags);
+            new TTS(ci, true).execute(tags);
 
 
             return;

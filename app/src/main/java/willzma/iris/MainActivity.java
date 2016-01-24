@@ -46,6 +46,8 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Random;
+
 import com.thalmic.myo.AbstractDeviceListener;
 import com.thalmic.myo.Arm;
 import com.thalmic.myo.DeviceListener;
@@ -64,6 +66,8 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
     private Camera camera=null;
     private boolean inPreview=false;
     private boolean cameraConfigured=false;
+    private boolean alreadyOpened = false;
+    private Random r = new Random();
     //private FrameLayout rotatorLayout;
 
     int TAKE_PHOTO_CODE = 0;
@@ -159,6 +163,14 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
+        String[] intros = {"Hi! I'm Iris.", "Hi! Nice to see you again!", "Hi! Fancy seeing you around here!",
+                "Hello again!"};
+        String saySpeech;
+
+            saySpeech = intros[r.nextInt(intros.length)];
+
+        new TTS(context, false).execute(saySpeech);
         View decorView = getWindow().getDecorView();
         int uiOptions = View.SYSTEM_UI_FLAG_FULLSCREEN;
         decorView.setSystemUiVisibility(uiOptions);
@@ -200,7 +212,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
         final Intent intent = new Intent(this, ScanActivity.class);
 
         Button takePicture = (Button) findViewById(R.id.takePicture);
-        takePicture.setOnLongClickListener(new View.OnLongClickListener() {
+        takePicture.setOnLongClickListener(new OnLongClickListener() {
             public boolean onLongClick(View v) {
                 startActivity(intent);
                 return true;
@@ -255,8 +267,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
 
                 try {
                     camera.takePicture(null, null, getJpegCallback());
-
-                    System.out.println("FILE ABOUT TO BE READ!!! GOGOGOGO");
+                    new TTS(context, false).execute("click!");
 
 
                 } catch (Exception e) {
