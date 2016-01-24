@@ -234,7 +234,6 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
                             fos = new FileOutputStream(imageFile);
 
                             fos.write(byteMe);
-                            fos.flush();
                             fos.close();
                             mediaScan(imageFile);
 
@@ -279,7 +278,6 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
             try {
                 FileOutputStream fos = new FileOutputStream(pictureFile);
                 fos.write(data);
-                fos.flush();
                 fos.close();
             } catch (FileNotFoundException e) {
 
