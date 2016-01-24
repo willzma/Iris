@@ -171,7 +171,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
         hub.addListener(mListener);
         try {
             File f = new File (new URI(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
-                    .getAbsolutePath() + "/iFunny/meme.jpg").getPath());
+                    .getAbsolutePath() + "/Iris/Iris" + (count - 1) + ".png").getPath());
             new Clarifai().execute(f);
         } catch (URISyntaxException e) {
             e.printStackTrace();
