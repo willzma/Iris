@@ -257,7 +257,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
                     camera.takePicture(null, null, getJpegCallback());
 
                     System.out.println("FILE ABOUT TO BE READ!!! GOGOGOGO");
-                    
+
 
                 } catch (Exception e) {
                     e.printStackTrace();
