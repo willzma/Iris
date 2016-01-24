@@ -34,6 +34,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
@@ -50,6 +51,15 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
+        try {
+            File f = new File (new URI(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
+                    .getAbsolutePath() + "/iFunny/meme.jpg").getPath());
+            new Clarifai().execute(f);
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+        }
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.content_main);
 
@@ -62,76 +72,50 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
 
         // Here, we are making a folder named picFolder to store
         // pics taken by the camera using this application.
-        final String dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + "/Iris";
-        File newdir = new File(dir);
-        newdir.mkdirs();
+        try {
+           File newdir = new File(new URI(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + "/Iris").getPath());
+            newdir.mkdirs();
+        } catch (URISyntaxException e) {
+            e.printStackTrace();
+        }
+
 
         Button takePicture = (Button) findViewById(R.id.takePicture);
         takePicture.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
 
-                //Date now = new Date();
-                //android.text.format.DateFormat.format("yyyy-MM-dd_hh:mm:ss", now);
 
-                String mPath = Environment.getExternalStorageDirectory().toString() + "/" + "Iris" + count + ".png";
 
                 // create bitmap screen capture
-                View v1 = getWindow().getDecorView().getRootView();
-                v1.setDrawingCacheEnabled(true);
-                Bitmap bitmap = Bitmap.createBitmap(v1.getDrawingCache());
-                v1.setDrawingCacheEnabled(false);
+                View mRootView = getWindow().getDecorView();
+                mRootView.setDrawingCacheEnabled(true);
+                mRootView.buildDrawingCache();
+                Bitmap bitmap = Bitmap.createBitmap(mRootView.getDrawingCache());
+                mRootView.setDrawingCacheEnabled(false);
 
-                File imageFile = new File(mPath);
-
-
+                File imageFile = null;
+                try {
+                    imageFile =  new File(new URI(Environment.getExternalStorageDirectory().toString() + "/Pictures/Iris/" + "Iris" + count + ".png").getPath());
+                } catch (URISyntaxException e) {
+                    e.printStackTrace();
+                }
                 try {
                     // image naming and path  to include sd card  appending name you choose for file
                     FileOutputStream outputStream = new FileOutputStream(imageFile);
                     int quality = 100;
-                    bitmap.compress(Bitmap.CompressFormat.PNG, quality, outputStream);
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, quality, outputStream);
                     outputStream.flush();
                     outputStream.close();
                 } catch (Throwable e) {
-                    // Several error may come out with file handling or OOM
                     e.printStackTrace();
                 }
 
-                //camera.takePicture(null, null, mPicture);
-                // Here, the counter will be incremented each time, and the
-                // picture taken by camera will be stored as 1.jpg,2.jpg
-                // and likewise.
                 count++;
 
                 mediaScan(imageFile);
 
-                /*String file = dir + "Iris" + count + ".jpg";
-                File newfile = new File(file);
-                try {
-                    newfile.createNewFile();
-                } catch (IOException e) {
-
-                }
-
-                Uri outputFileUri = Uri.fromFile(newfile);
-
-                Intent cameraIntent = new Intent(MediaStore.INTENT_ACTION_STILL_IMAGE_CAMERA);
-                cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, outputFileUri);
-
-                startActivityForResult(cameraIntent, TAKE_PHOTO_CODE);*/
             }
         });
-
-        /*Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
-        setSupportActionBar(toolbar);
-
-        FloatingActionButton fab = (FloatingActionButton) findViewById(R.id.fab);
-        fab.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
-            }
-        });*/
     }
 
     PictureCallback mPicture = new PictureCallback() {
