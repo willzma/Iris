@@ -7,6 +7,7 @@ import android.graphics.Bitmap;
 import android.hardware.Camera;
 import android.hardware.Camera.PictureCallback;
 import android.hardware.Camera.ShutterCallback;
+import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -69,18 +70,29 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
         takePicture.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
 
-                View content = findViewById(R.id.layoutroot);
-                Bitmap bitmap = content.getDrawingCache();
-                File file = new File( Environment.getExternalStorageDirectory() + "/" + "Iris" + count + ".png");
-                try
-                {
-                    file.createNewFile();
-                    FileOutputStream ostream = new FileOutputStream(file);
-                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, ostream);
-                    ostream.close();
-                }
-                catch (Exception e)
-                {
+                //Date now = new Date();
+                //android.text.format.DateFormat.format("yyyy-MM-dd_hh:mm:ss", now);
+
+                String mPath = Environment.getExternalStorageDirectory().toString() + "/" + "Iris" + count + ".png";
+
+                // create bitmap screen capture
+                View v1 = getWindow().getDecorView().getRootView();
+                v1.setDrawingCacheEnabled(true);
+                Bitmap bitmap = Bitmap.createBitmap(v1.getDrawingCache());
+                v1.setDrawingCacheEnabled(false);
+
+                File imageFile = new File(mPath);
+
+
+                try {
+                    // image naming and path  to include sd card  appending name you choose for file
+                    FileOutputStream outputStream = new FileOutputStream(imageFile);
+                    int quality = 100;
+                    bitmap.compress(Bitmap.CompressFormat.PNG, quality, outputStream);
+                    outputStream.flush();
+                    outputStream.close();
+                } catch (Throwable e) {
+                    // Several error may come out with file handling or OOM
                     e.printStackTrace();
                 }
 
@@ -89,6 +101,9 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
                 // picture taken by camera will be stored as 1.jpg,2.jpg
                 // and likewise.
                 count++;
+
+                mediaScan(imageFile);
+
                 /*String file = dir + "Iris" + count + ".jpg";
                 File newfile = new File(file);
                 try {
@@ -338,6 +353,17 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
         {
             Log.d("Iris", "Cannot start preview", e);
         }
+    }
+
+    public void mediaScan(File file) {
+        MediaScannerConnection.scanFile(this,
+                new String[]{file.toString()}, null,
+                new MediaScannerConnection.OnScanCompletedListener() {
+                    public void onScanCompleted(String path, Uri uri) {
+                        Log.i("ExternalStorage", "Scanned " + path + ":");
+                        Log.i("ExternalStorage", "-> uri=" + uri);
+                    }
+                });
     }
 
     @Override
