@@ -1,6 +1,12 @@
 package willzma.iris;
 
+import android.app.Activity;
 import android.content.Intent;
+import android.content.pm.ActivityInfo;
+import android.graphics.Bitmap;
+import android.hardware.Camera;
+import android.hardware.Camera.PictureCallback;
+import android.hardware.Camera.ShutterCallback;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -10,50 +16,93 @@ import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.Display;
+import android.view.Surface;
+import android.view.SurfaceHolder;
+import android.view.SurfaceView;
 import android.view.View;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.ImageView;
+import android.widget.Toast;
 
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.URI;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements SurfaceHolder.Callback {
+
+    private SurfaceView preview=null;
+    private SurfaceHolder previewHolder=null;
+    private Camera camera=null;
+    private boolean inPreview=false;
+    private boolean cameraConfigured=false;
 
     int TAKE_PHOTO_CODE = 0;
-    protected int count = 0;
-    protected String dir;
-    protected File newDir;
+    private int count = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+        setContentView(R.layout.content_main);
 
-        dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
-                + "/IrisPictures/";
-        newDir = new File(dir);
-        newDir.mkdirs();
+        setRequestedOrientation(ActivityInfo.SCREEN_ORIENTATION_PORTRAIT);
+
+        preview = (SurfaceView) findViewById(R.id.surfaceView);
+        previewHolder = preview.getHolder();
+        previewHolder.addCallback(surfaceCallback);
+        previewHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
+
+        // Here, we are making a folder named picFolder to store
+        // pics taken by the camera using this application.
+        final String dir = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES) + "/Iris";
+        File newdir = new File(dir);
+        newdir.mkdirs();
 
         Button takePicture = (Button) findViewById(R.id.takePicture);
         takePicture.setOnClickListener(new View.OnClickListener() {
             public void onClick(View v) {
-                count++;
-                String file = dir + count + ".jpg";
-                File newFile = new File(file);
 
+                View content = findViewById(R.id.layoutroot);
+                Bitmap bitmap = content.getDrawingCache();
+                File file = new File( Environment.getExternalStorageDirectory() + "/" + "Iris" + count + ".png");
+                try
+                {
+                    file.createNewFile();
+                    FileOutputStream ostream = new FileOutputStream(file);
+                    bitmap.compress(Bitmap.CompressFormat.PNG, 100, ostream);
+                    ostream.close();
+                }
+                catch (Exception e)
+                {
+                    e.printStackTrace();
+                }
+
+                //camera.takePicture(null, null, mPicture);
+                // Here, the counter will be incremented each time, and the
+                // picture taken by camera will be stored as 1.jpg,2.jpg
+                // and likewise.
+                count++;
+                /*String file = dir + "Iris" + count + ".jpg";
+                File newfile = new File(file);
                 try {
-                    newFile.createNewFile();
+                    newfile.createNewFile();
                 } catch (IOException e) {
 
                 }
 
-                Uri outputFileUri = Uri.fromFile(newFile);
+                Uri outputFileUri = Uri.fromFile(newfile);
 
-                Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+                Intent cameraIntent = new Intent(MediaStore.INTENT_ACTION_STILL_IMAGE_CAMERA);
                 cameraIntent.putExtra(MediaStore.EXTRA_OUTPUT, outputFileUri);
 
-                startActivityForResult(cameraIntent, TAKE_PHOTO_CODE);
+                startActivityForResult(cameraIntent, TAKE_PHOTO_CODE);*/
             }
         });
 
@@ -70,14 +119,151 @@ public class MainActivity extends AppCompatActivity {
         });*/
     }
 
+    PictureCallback mPicture = new PictureCallback() {
+        @Override
+        public void onPictureTaken(byte[] data, Camera camera) {
+            File pictureFile = getOutputMediaFile();
+            if (pictureFile == null) {
+                return;
+            }
+            try {
+                FileOutputStream fos = new FileOutputStream(pictureFile);
+                fos.write(data);
+                fos.close();
+            } catch (FileNotFoundException e) {
+
+            } catch (IOException e) {
+            }
+        }
+    };
+
+    private static File getOutputMediaFile() {
+        File mediaStorageDir = new File(
+                Environment
+                        .getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES),
+                "Iris");
+        if (!mediaStorageDir.exists()) {
+            if (!mediaStorageDir.mkdirs()) {
+                Log.d("Iris", "failed to create directory");
+                return null;
+            }
+        }
+        // Create a media file name
+        String timeStamp = new SimpleDateFormat("yyyyMMdd_HHmmss")
+                .format(new Date());
+        File mediaFile;
+        mediaFile = new File(mediaStorageDir.getPath() + File.separator
+                + "IMG_" + timeStamp + ".jpg");
+
+        return mediaFile;
+    }
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
 
         if (requestCode == TAKE_PHOTO_CODE && resultCode == RESULT_OK) {
-            Log.d("Iris", "Picture saved");
+            Log.d("Iris", "Pic saved");
         }
     }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+
+        camera=Camera.open();
+        camera.setDisplayOrientation(90);
+        startPreview();
+    }
+
+    @Override
+    public void onPause() {
+        if (inPreview) {
+            camera.stopPreview();
+        }
+
+        camera.release();
+        camera=null;
+        inPreview=false;
+
+        super.onPause();
+    }
+
+    private Camera.Size getBestPreviewSize(int width, int height,
+                                           Camera.Parameters parameters) {
+        Camera.Size result=null;
+
+        for (Camera.Size size : parameters.getSupportedPreviewSizes()) {
+            if (size.width<=width && size.height<=height) {
+                if (result==null) {
+                    result=size;
+                }
+                else {
+                    int resultArea=result.width*result.height;
+                    int newArea=size.width*size.height;
+
+                    if (newArea>resultArea) {
+                        result=size;
+                    }
+                }
+            }
+        }
+
+        return(result);
+    }
+
+    private void initPreview(int width, int height) {
+        if (camera!=null && previewHolder.getSurface()!=null) {
+            try {
+                camera.setPreviewDisplay(previewHolder);
+            }
+            catch (Throwable t) {
+                Log.e("PreviewDemo-surfaceCall",
+                        "Exception in setPreviewDisplay()", t);
+                Toast
+                        .makeText(this, t.getMessage(), Toast.LENGTH_LONG)
+                        .show();
+            }
+
+            if (!cameraConfigured) {
+                Camera.Parameters parameters=camera.getParameters();
+                Camera.Size size=getBestPreviewSize(width, height,
+                        parameters);
+
+                if (size!=null) {
+                    parameters.setPreviewSize(size.width, size.height);
+                    camera.setParameters(parameters);
+                    cameraConfigured=true;
+                }
+            }
+        }
+    }
+
+    private void startPreview() {
+        if (cameraConfigured && camera!=null) {
+            camera.startPreview();
+            inPreview=true;
+        }
+    }
+
+    SurfaceHolder.Callback surfaceCallback=new SurfaceHolder.Callback() {
+        public void surfaceCreated(SurfaceHolder holder) {
+            // no-op -- wait until surfaceChanged()
+        }
+
+        public void surfaceChanged(SurfaceHolder holder,
+                                   int format, int width,
+                                   int height) {
+            if (!inPreview) {
+                initPreview(width, height);
+                startPreview();
+            }
+        }
+
+        public void surfaceDestroyed(SurfaceHolder holder) {
+            // no-op
+        }
+    };
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -99,5 +285,63 @@ public class MainActivity extends AppCompatActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void surfaceCreated(SurfaceHolder holder) {
+
+    }
+
+    public void surfaceChanged(SurfaceHolder holder, int format, int width, int height)
+    {
+        /*if (inPreview)
+        {
+            camera.stopPreview();
+        }
+
+        Camera.Parameters parameters = camera.getParameters();
+        Display display = ((WindowManager)getSystemService(WINDOW_SERVICE)).getDefaultDisplay();
+
+        if(display.getRotation() == Surface.ROTATION_0)
+        {
+            parameters.setPreviewSize(height, width);
+        }
+
+        if(display.getRotation() == Surface.ROTATION_90)
+        {
+            parameters.setPreviewSize(width, height);
+        }
+
+        if(display.getRotation() == Surface.ROTATION_180)
+        {
+            parameters.setPreviewSize(height, width);
+        }
+
+        if(display.getRotation() == Surface.ROTATION_270)
+        {
+            parameters.setPreviewSize(width, height);
+        }
+
+        camera.setParameters(parameters);
+        startPreview();*/
+    }
+
+    public void previewCamera()
+    {
+        try
+        {
+            camera.setPreviewDisplay(previewHolder);
+            camera.startPreview();
+            inPreview = true;
+        }
+        catch(Exception e)
+        {
+            Log.d("Iris", "Cannot start preview", e);
+        }
+    }
+
+    @Override
+    public void surfaceDestroyed(SurfaceHolder holder) {
+
     }
 }
