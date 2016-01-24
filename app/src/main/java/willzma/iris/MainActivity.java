@@ -1,5 +1,6 @@
 package willzma.iris;
 
+import android.app.ActionBar;
 import android.app.Activity;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
@@ -51,6 +52,9 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        View decorView = getWindow().getDecorView();
+        int uiOptions = View.SYSTEM_UI_FLAG_FULLSCREEN;
+        decorView.setSystemUiVisibility(uiOptions);s
 
         try {
             File f = new File (new URI(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
@@ -82,11 +86,36 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
 
         Button takePicture = (Button) findViewById(R.id.takePicture);
         takePicture.setOnClickListener(new View.OnClickListener() {
+
+
+            private PictureCallback getJpegCallback(){
+                PictureCallback jpeg=new PictureCallback() {
+                    @Override
+                    public void onPictureTaken(byte[] data, Camera camera) {
+                        FileOutputStream fos;
+                        try {
+                            File imageFile = null;
+                                imageFile =  new File(new URI(Environment.getExternalStorageDirectory().toString() + "/Pictures/Iris/" + "Iris" + count + ".png").getPath());
+                            fos = new FileOutputStream(imageFile);
+                            fos.write(data);
+                            fos.close();
+                            mediaScan(imageFile);
+
+                        }  catch (IOException e) {
+                            //do something about it
+                        } catch (URISyntaxException e1) {
+
+                        }
+                    }
+                };
+                return jpeg;
+            }
+
             public void onClick(View v) {
 
 
-
-                // create bitmap screen capture
+                camera.takePicture(null, null, getJpegCallback());
+/*
                 View mRootView = getWindow().getDecorView();
                 mRootView.setDrawingCacheEnabled(true);
                 mRootView.buildDrawingCache();
@@ -108,11 +137,10 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
                     outputStream.close();
                 } catch (Throwable e) {
                     e.printStackTrace();
-                }
+                }*/
 
                 count++;
 
-                mediaScan(imageFile);
 
             }
         });
