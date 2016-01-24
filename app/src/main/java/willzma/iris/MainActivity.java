@@ -236,6 +236,10 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
                             fos.write(byteMe);
                             fos.close();
                             mediaScan(imageFile);
+                            System.out.println("FILE SAVED!!! GOGOGOGO");
+                            File f = new File (new URI(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
+                                    .getAbsolutePath() + "/Iris/Iris" + (count) + ".jpg").getPath());
+                            new Clarifai().launchThread(f, context);
 
                         }  catch (IOException e) {
                             //do something about it
@@ -249,15 +253,13 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
 
             public void onClick(View v) {
 
-                camera.takePicture(null, null, getJpegCallback());
                 try {
-                    File f = new File (new URI(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
-                            .getAbsolutePath() + "/Iris/Iris" + (count+1) + ".jpg").getPath());
-                    Clarifai x = new Clarifai();
-                    x.execute(f);
-                    new TTS(context).execute(x);
+                    camera.takePicture(null, null, getJpegCallback());
 
-                } catch (URISyntaxException e) {
+                    System.out.println("FILE ABOUT TO BE READ!!! GOGOGOGO");
+                    
+
+                } catch (Exception e) {
                     e.printStackTrace();
                 }
 

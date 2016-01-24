@@ -12,7 +12,7 @@ import java.util.Locale;
 /**
  * Created by ChaityaShah on 1/24/16.
  */
-public class TTS extends AsyncTask<Clarifai, Void, Boolean> implements TextToSpeech.OnInitListener {
+public class TTS extends AsyncTask<String, Void, Boolean> implements TextToSpeech.OnInitListener {
     private Context context;
 
     public TTS(Context context) {
@@ -24,15 +24,11 @@ public class TTS extends AsyncTask<Clarifai, Void, Boolean> implements TextToSpe
     private String txt = "";
 
 
-    protected Boolean doInBackground(Clarifai... params) {
-        try {
-            params[0].l.await();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
+    protected Boolean doInBackground(String... params) {
+
         speaker = new TextToSpeech(context, this);
 
-        txt = params[0].tags;
+        txt = params[0];
         return true;
     }
 
