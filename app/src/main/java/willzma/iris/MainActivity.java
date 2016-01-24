@@ -6,7 +6,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.pm.ActivityInfo;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Color;
+import android.graphics.Matrix;
 import android.hardware.Camera;
 import android.hardware.Camera.PictureCallback;
 import android.hardware.Camera.ShutterCallback;
@@ -30,10 +32,12 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.WindowManager;
 import android.widget.Button;
+import android.widget.FrameLayout;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
@@ -60,6 +64,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
     private Camera camera=null;
     private boolean inPreview=false;
     private boolean cameraConfigured=false;
+    //private FrameLayout rotatorLayout;
 
     int TAKE_PHOTO_CODE = 0;
     private int count = 0;
@@ -179,6 +184,11 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
         previewHolder.addCallback(surfaceCallback);
         previewHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
 
+        //rotatorLayout = (FrameLayout) findViewById(R.id.layoutroot);
+        //rotatorLayout.setRotation(90);
+
+        //preview.setRotation(90);
+
         // Here, we are making a folder named picFolder to store
         // pics taken by the camera using this application.
         try {
@@ -204,11 +214,27 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
                     @Override
                     public void onPictureTaken(byte[] data, Camera camera) {
                         FileOutputStream fos;
+
+                        byte[] data2 = data.clone();
+
+                        Bitmap bmp = BitmapFactory.decodeByteArray(data2, 0, data2.length);
+
+                        Matrix matrix = new Matrix();
+                        matrix.postRotate(90);
+
+                        Bitmap bmp2 = Bitmap.createBitmap(bmp, 0, 0, bmp.getWidth(), bmp.getHeight(), matrix, true);
+
+                        ByteArrayOutputStream stm = new ByteArrayOutputStream();
+                        bmp2.compress(Bitmap.CompressFormat.JPEG, 50, stm);
+
+                        byte[] byteMe = stm.toByteArray();
+
                         try {
-                            File imageFile = null;
-                                imageFile =  new File(new URI(Environment.getExternalStorageDirectory().toString() + "/Pictures/Iris/" + "Iris" + count + ".png").getPath());
+                            File imageFile = new File(new URI(Environment.getExternalStorageDirectory().toString() + "/Pictures/Iris/" + "Iris" + count + ".jpg").getPath());
                             fos = new FileOutputStream(imageFile);
-                            fos.write(data);
+
+                            fos.write(byteMe);
+                            fos.flush();
                             fos.close();
                             mediaScan(imageFile);
 
@@ -227,7 +253,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
                 camera.takePicture(null, null, getJpegCallback());
                 try {
                     File f = new File (new URI(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_PICTURES)
-                            .getAbsolutePath() + "/Iris/Iris" + (count+1) + ".png").getPath());
+                            .getAbsolutePath() + "/Iris/Iris" + (count+1) + ".jpg").getPath());
                     Clarifai x = new Clarifai();
                     x.execute(f);
                     new TTS(context).execute(x);
@@ -235,29 +261,6 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
                 } catch (URISyntaxException e) {
                     e.printStackTrace();
                 }
-/*
-                View mRootView = getWindow().getDecorView();
-                mRootView.setDrawingCacheEnabled(true);
-                mRootView.buildDrawingCache();
-                Bitmap bitmap = Bitmap.createBitmap(mRootView.getDrawingCache());
-                mRootView.setDrawingCacheEnabled(false);
-
-                File imageFile = null;
-                try {
-                    imageFile =  new File(new URI(Environment.getExternalStorageDirectory().toString() + "/Pictures/Iris/" + "Iris" + count + ".png").getPath());
-                } catch (URISyntaxException e) {
-                    e.printStackTrace();
-                }
-                try {
-                    // image naming and path  to include sd card  appending name you choose for file
-                    FileOutputStream outputStream = new FileOutputStream(imageFile);
-                    int quality = 100;
-                    bitmap.compress(Bitmap.CompressFormat.JPEG, quality, outputStream);
-                    outputStream.flush();
-                    outputStream.close();
-                } catch (Throwable e) {
-                    e.printStackTrace();
-                }*/
 
                 count++;
 
@@ -276,6 +279,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
             try {
                 FileOutputStream fos = new FileOutputStream(pictureFile);
                 fos.write(data);
+                fos.flush();
                 fos.close();
             } catch (FileNotFoundException e) {
 
@@ -351,8 +355,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
             if (size.width<=width && size.height<=height) {
                 if (result==null) {
                     result=size;
-                }
-                else {
+                } else {
                     int resultArea=result.width*result.height;
                     int newArea=size.width*size.height;
 
@@ -448,7 +451,7 @@ public class MainActivity extends AppCompatActivity implements SurfaceHolder.Cal
 
     public void surfaceChanged(SurfaceHolder holder, int format, int width, int height)
     {
-        
+
     }
 
     public void previewCamera()
